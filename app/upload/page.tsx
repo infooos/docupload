@@ -91,7 +91,7 @@ export default function UploadPage() {
           <Upload className="h-12 w-12 text-blue-500" />
         </div>
         <h1 className="text-2xl font-bold text-center mb-8">Upload File</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
           <div>
             <Input
               type="file"

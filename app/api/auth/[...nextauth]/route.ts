@@ -1,8 +1,15 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { AuthOptions } from "next-auth";
 
-export const authOptions = {
+// Create a new Supabase client for server-side operations
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -10,20 +17,20 @@ export const authOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null;
         
-        const { data: { user }, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: credentials.email,
           password: credentials.password,
         });
 
-        if (error || !user) return null;
+        if (error || !data.user) return null;
         
         return {
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.full_name,
+          id: data.user.id,
+          email: data.user.email!,
+          name: data.user.user_metadata?.full_name || null,
         };
       }
     }),
@@ -34,17 +41,17 @@ export const authOptions = {
     error: '/error',
   },
   session: {
-    strategy: 'jwt',
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (session?.user) {
         session.user.id = token.sub;
       }
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user: any }) {
       if (user) {
         token.id = user.id;
       }
