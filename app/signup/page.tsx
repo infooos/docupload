@@ -15,14 +15,17 @@ const schema = z.object({
   role: z.enum(['end_user', 'company_user', 'superadmin']),
 })
 
+// Define the form data type
+type SignupFormData = z.infer<typeof schema>;
+
 export default function Signup() {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm<SignupFormData>({
     resolver: zodResolver(schema),
   })
 
-  const onSubmit = async (data: z.infer<typeof schema>) => {
+  const onSubmit = async (data: SignupFormData) => {
     setLoading(true)
     const { error } = await supabase.auth.signUp({
       email: data.email,

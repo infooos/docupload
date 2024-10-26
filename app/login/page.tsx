@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from "@/components/ui/button"
@@ -14,14 +14,16 @@ const schema = z.object({
   password: z.string().min(6),
 })
 
+type FormData = z.infer<typeof schema>
+
 export default function Login() {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema)
   })
 
-  const onSubmit = async (data: z.infer<typeof schema>) => {
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
